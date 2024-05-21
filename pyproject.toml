@@ -17,7 +17,12 @@ pandas = "^2.2.2"
 matplotlib = "^3.9.0"
 tensorflow = "^2.16.1"
 keras = "^3.3.3"
+ipykernel = "^6.29.4"
+albumentations = "^1.4.7"
 
+
+[tool.poetry.group.dev.dependencies]
+ipykernel = "^6.29.4"
 
 [build-system]
 requires = ["poetry-core"]
