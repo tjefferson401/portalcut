@@ -7,3 +7,4 @@ datasets
 # all sorts of pycache
 __pycache__
 *.pyc
+data
