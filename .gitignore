@@ -1,9 +1,7 @@
 .ipynb_checkpoints
-
+data/*
 ./datasets
 datasets
-
-
 # all sorts of pycache
 __pycache__
 *.pyc
