@@ -8,9 +8,13 @@ import utils
 
 
 
-def train_model(model, dataloaders, epochs, config):
+def train_model(model, dataloaders, epochs, config, batch_size):
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     model.to(device)
+    
+    print_freq = 10
+    
+    batch_size = config['batch_size']
 
 
     # Data loaders is a tuple of (train_loader, val_loader, test_loader)
@@ -23,7 +27,7 @@ def train_model(model, dataloaders, epochs, config):
             
             config={
                 "learning_rate": lr,
-                "epochs": num_epochs,
+                "epochs": epochs,
                 "batch_size": batch_size,
                 "optimizer": "Adam",
             })
@@ -31,12 +35,9 @@ def train_model(model, dataloaders, epochs, config):
     
 
  
-data_loader = data_loader_train
+    optimizer = torch.optim.Adam(model.parameters(), lr=lr)
 
-scaler = None  # Define the "scaler" variable
 
-model_save_path = './models/2024-05-30-kitti-test1-fasterrcnn_resnet50_fpn_v2_scratch_50epv2.pth'
-print_freq = 10
 # Training loop
 
 # Assume we have an existing setup

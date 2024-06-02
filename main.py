@@ -79,11 +79,26 @@ def train_model(model, dataloaders, epochs, config):
 
     return model
 
+def main(args):
+    # config = models.model_configs[args.config]
+    # model = models.get_model(config)
+    # dataloaders = datasets.get_dataloaders(config)
+    # model = train_model(model, dataloaders, config['epochs'], config)
+    # print(f"Training of {config['name']} completed."
+    scaler = None  # Define the "scaler" variable
 
+    model_save_path = './models/2024-05-30-kitti-test1-fasterrcnn_resnet50_fpn_v2_scratch_50epv2.pth'
+    pass
+          
+          
+          
+          
+          
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--config', type=int, required=True)
     args = parser.parse_args()
+    
 
     
 
