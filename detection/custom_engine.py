@@ -11,7 +11,6 @@ import numpy as np
 from evals import evaluate_model
 import pprint as pp
 
-
 def train_model(model, dataloaders, datasets, epochs, model_config, learning_rate=0.001):
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     model.to(device)
@@ -23,6 +22,17 @@ def train_model(model, dataloaders, datasets, epochs, model_config, learning_rat
     train_dataset, val_dataset, test_dataset = datasets
     # Data loaders is a tuple of (train_loader, val_loader, test_loader)
     train_dataloader, val_dataloader, test_dataloader = dataloaders
+
+    pretrained_suffix = '_pretrained' if model_config['pretrained'] else ''
+    frozen_layers_suffix = '_frozen_layers' if model_config['freeze_layers'] else ''
+
+    model_full_name = f"{model_config['dataset']}_{model_config['name']}_{epochs}{pretrained_suffix}{frozen_layers_suffix}"
+
+
+    model_saving_path = f"models/{model_full_name}"
+    result_saving_path = f"results/{model_full_name}"
+    os.makedirs(model_saving_path , exist_ok=True)
+    os.makedirs(result_saving_path , exist_ok=True)
     
 
     wandb.init(project="portalcut",
@@ -45,7 +55,8 @@ def train_model(model, dataloaders, datasets, epochs, model_config, learning_rat
     # Training loop
 
     # Assume we have an existing setup
-    for epoch in range(epochs):
+    for i in range(epochs):
+        epoch = i + 1
         model.train()
         metric_logger = utils.MetricLogger(delimiter="  ")
         metric_logger.add_meter("lr", utils.SmoothedValue(window_size=1, fmt="{value:.6f}"))
@@ -102,14 +113,14 @@ def train_model(model, dataloaders, datasets, epochs, model_config, learning_rat
         
 
         # Save the model if it has the best validation accuracy so far
+        
         if mAP > best_val_accuracy:
             best_val_accuracy = mAP
-            os.makedirs(f"models/{model_config['name']}", exist_ok=True)
-            torch.save(model.state_dict(), f"models/{model_config['name']}/best_val_model.pth")
+            torch.save(model.state_dict(), f"{model_saving_path}/best_val_model.pth")
 
         # Save model after every epoch or as needed
-        os.makedirs(f"models/{model_config['name']}", exist_ok=True)
-        torch.save(model.state_dict(), f"models/{model_config['name']}/epoch_{epoch}.pth")
+
+        torch.save(model.state_dict(), f"{model_saving_path}/epoch_{epoch}.pth")
 
     """
     Evaluation on the test set
@@ -125,13 +136,8 @@ def train_model(model, dataloaders, datasets, epochs, model_config, learning_rat
     })
 
     # Save final model
-    os.makedirs(f"models/{model_config['name']}", exist_ok=True)
-    torch.save(model.state_dict(), f"models/{model_config['name']}/final_model.pth")
+    torch.save(model.state_dict(), f"{model_saving_path}/final_model.pth")
 
-    pp.pprint(per_class_ap)
-    # Save accuracy results locally
-    print(f"Mean IoU: {mean_iou:.4f}")
-    print(f"test_iou: {test_iou:.4f}")
     
     results = {
         **model_config,
@@ -158,21 +164,14 @@ def train_model(model, dataloaders, datasets, epochs, model_config, learning_rat
     for key, value in results.items():
         print(f"The type of '{key}' is {type(value)}")
 
-    os.makedirs(f"results/{model_config['name']}", exist_ok=True)
     
-    with open(f"results/{model_config['name']}/results.json", 'w') as f:
-        json.dump(results, f)  # Use the custom default function
+    with open(f"{result_saving_path}/results.json", 'w') as f:
+        json.dump(results, f) 
 
 
     wandb.finish()
     
     return model
-
-def tensor_to_list(obj):
-    if isinstance(obj, torch.Tensor):
-        return obj.tolist()  # Convert tensors to lists
-    raise TypeError("Object of type Tensor is not JSON serializable")
-
 
 
 def reset_environment(seed=42):
