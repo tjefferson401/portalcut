@@ -88,6 +88,7 @@ def main(args):
     scaler = None  # Define the "scaler" variable
 
     model_save_path = './models/2024-05-30-kitti-test1-fasterrcnn_resnet50_fpn_v2_scratch_50epv2.pth'
+    torch.save(model.state_dict(), model_save_path)
     pass
           
           
