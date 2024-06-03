@@ -11,7 +11,7 @@
 # 2. image segmentation
 # 3. where to add back in original img
 
-import io
+import io, time
 import requests
 import base64
 import torch
@@ -92,7 +92,7 @@ def augmentWithSD(img, prompt="Add a male cyclist on the road without changing a
             "init_image": image_bytes
         },
         data={
-            "image_strength": 0.6,
+            "image_strength": 0.4,
             "init_image_mode": "IMAGE_STRENGTH",
             "text_prompts[0][text]": prompt,
             "cfg_scale": 7,
@@ -106,10 +106,9 @@ def augmentWithSD(img, prompt="Add a male cyclist on the road without changing a
         aug_img = out["artifacts"][0]
         
         # writing to file is unnecessary and will be removed eventually
-        with open("./sample_test_cyclist2.png", 'wb') as file:
-            file.write(base64.b64decode(aug_img["base64"]))
-
-            return Image.open(io.BytesIO(base64.b64decode(aug_img["base64"])))
+        # with open("./sample_test_cyclist2.png", 'wb') as file:
+        #     file.write(base64.b64decode(aug_img["base64"]))
+        return Image.open(io.BytesIO(base64.b64decode(aug_img["base64"])))
     else:
         raise Exception(str(response.json()))
 
@@ -140,7 +139,7 @@ def segmentGetLabel(img):
     masks_queries_logits = outputs.masks_queries_logits
 
     # you can pass them to processor for postprocessing
-    results = processor.post_process_instance_segmentation(outputs, target_sizes=[image.size[::-1]], threshold=0.9)[0]
+    results = processor.post_process_instance_segmentation(outputs, target_sizes=[img.size[::-1]], threshold=0.9)[0]
     # print(results.keys())
 
     segment_to_label = {segment['id']: segment['label_id'] for segment in results["segments_info"]}
@@ -159,43 +158,66 @@ def segmentGetLabel(img):
             mask = get_mask(key)
             return mask
 
-    # plt.show()
-
 def createData(sample):
-    image = augmentWithSD(sample[0])
-    added_label = segmentGetLabel(image)
-    new_labels = sample[1]['labels']
-    new_labels.update(added_label)
+    image, target = sample
+    plt.subplot(221).imshow(image)
+    plt.title("Original image from KITTI")
 
-    return image, new_labels
+    image_np = np.array(image)
+
+    # generate image and display it (default cyclist)
+    generated = augmentWithSD(image)
+    plt.subplot(222).imshow(generated)
+    plt.title("Diffusion output image")
+    
+    # image2 = Image.open("sample_test_cyclist.png")
+
+    # Get mask for the cyclist
+    mask = segmentGetLabel(generated)
+    mask_np = np.array(mask) / 255
+    mask_3d = np.repeat(mask_np[:, :, np.newaxis], 3, axis=2)
+
+    # Apply the mask to the original image
+    aug_image_np = np.array(generated)
+    masked_image_np = aug_image_np * mask_3d
+
+    # Convert the result back to a PIL image
+    masked_image = Image.fromarray(masked_image_np.astype(np.uint8))
+
+    # Display masked image
+    plt.subplot(223).imshow(masked_image)
+    plt.title("Mask outputted by segmenter")
+
+    # Use masked image to augment original image to obtain new image with new label
+    combined_image_np = image_np * (1 - mask_3d) + masked_image_np
+
+    # Convert the resulting NumPy array back to a PIL image
+    combined_image = Image.fromarray(combined_image_np.astype(np.uint8))
+
+    # Save or display the combined image
+    plt.subplot(224).imshow(combined_image)
+    plt.title("Final Output!")
+    timestamp = int(time.time() * 1000)
+    combined_image.save(f"final_augmented_{timestamp}.png")
+
+    # Update labels and boxes
+    new_labels = target['labels']
+    new_boxes = target['boxes']
+    # new_labels.update(added_label)
+    # new_boxes.update(added_box)
+    
+    plt.axis('off')
+    plt.show()
+
+    return combined_image, target
 
 dataset = KittiTorch(root='../data', download=False)
 labels = ['background', 'Car', 'Van', 'Truck', 'Pedestrian', 'Person_sitting', 'Cyclist', 'Tram', 'Misc', "Don'tCare"]
 
 # Execute pipeline
+out_image, out_target = createData(dataset[0])
+# TODO: add image and target to dataset
 
-# Extract original image from dataset and display it
-image, target = dataset[0]
-# plt.imshow(image)
-
-# generate image and display it (default cyclist)
-# generated = augmentWithSD(image)
-# plt.imshow(generated)
-image2 = Image.open("sample_test_cyclist.png")
-
-# Get mask for the cyclist
-mask = segmentGetLabel(image2)
-mask_np = np.array(mask) / 255
-mask_3d = np.repeat(mask_np[:, :, np.newaxis], 3, axis=2)
-
-# Apply the mask to the original image
-masked_image_np = image2 * mask_3d
-
-# Convert the result back to a PIL image
-masked_image = Image.fromarray(masked_image_np.astype(np.uint8))
-
-# Display masked image
-plt.imshow(masked_image)
-plt.show()
-
-# TODO: Use masked image to augment original image to obtain new image with new label
+# get_tensor = get_transform()
+# tensored = get_tensor(image2)
+# visualize_image_with_boxes(tensored, target['boxes'], target['labels'], labels)
