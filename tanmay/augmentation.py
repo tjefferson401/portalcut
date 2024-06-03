@@ -115,11 +115,11 @@ def augmentWithSD(img, prompt="Add a male cyclist on the road without changing a
 class KittiTorch(datasets.Kitti):
     def __getitem__(self, index):
         image, target = super().__getitem__(index)
-        # Adding +1 to all indices to reserve 0 for background
-        labels = [1 + ['Car', 'Van', 'Truck', 'Pedestrian', 'Person_sitting', 'Cyclist', 'Tram', 'Misc', 'DontCare'].index(t['type']) for t in target if t['type'] in ['Car', 'Van', 'Truck', 'Pedestrian', 'Person_sitting', 'Cyclist', 'Tram', 'Misc', 'DontCare']]
-        boxes = [t['bbox'] for t in target if t['type'] in ['Car', 'Van', 'Truck', 'Pedestrian', 'Person_sitting', 'Cyclist', 'Tram', 'Misc', 'DontCare']]
-        target = {'boxes': torch.as_tensor(boxes, dtype=torch.float32).reshape(-1, 4),
-        'labels': torch.as_tensor(labels, dtype=torch.int64)}
+        # # Adding +1 to all indices to reserve 0 for background
+        # labels = [1 + ['Car', 'Van', 'Truck', 'Pedestrian', 'Person_sitting', 'Cyclist', 'Tram', 'Misc', 'DontCare'].index(t['type']) for t in target if t['type'] in ['Car', 'Van', 'Truck', 'Pedestrian', 'Person_sitting', 'Cyclist', 'Tram', 'Misc', 'DontCare']]
+        # boxes = [t['bbox'] for t in target if t['type'] in ['Car', 'Van', 'Truck', 'Pedestrian', 'Person_sitting', 'Cyclist', 'Tram', 'Misc', 'DontCare']]
+        # target = {'boxes': torch.as_tensor(boxes, dtype=torch.float32).reshape(-1, 4),
+        # 'labels': torch.as_tensor(labels, dtype=torch.int64)}
         return image, target
 
 
@@ -140,22 +140,13 @@ def segmentGetLabel(img):
 
     # you can pass them to processor for postprocessing
     results = processor.post_process_instance_segmentation(outputs, target_sizes=[img.size[::-1]], threshold=0.9)[0]
-    # print(results.keys())
-
     segment_to_label = {segment['id']: segment['label_id'] for segment in results["segments_info"]}
 
-    def get_mask(segment_id):
-        print("Visualizing mask for", segment_id, ":", model.config.id2label[segment_to_label[segment_id]])
-
-        mask = (results['segmentation'].numpy() == segment_id)
-        visual_mask = (mask * 255).astype(np.uint8)
-        visual_mask = Image.fromarray(visual_mask)
-
-        return visual_mask
-    
     for key, val in segment_to_label.items():
+        print("Label:", model.config.id2label[val])
         if model.config.id2label[val] == "bicycle":
-            mask = get_mask(key)
+            print("Visualizing mask for", key, ":", model.config.id2label[val])
+            mask = (results['segmentation'].numpy() == key)
             return mask
 
 def createData(sample):
@@ -169,13 +160,21 @@ def createData(sample):
     generated = augmentWithSD(image)
     plt.subplot(222).imshow(generated)
     plt.title("Diffusion output image")
+    generated.show()
     
     # image2 = Image.open("sample_test_cyclist.png")
 
     # Get mask for the cyclist
-    mask = segmentGetLabel(generated)
-    mask_np = np.array(mask) / 255
+    mask_np = segmentGetLabel(generated)
     mask_3d = np.repeat(mask_np[:, :, np.newaxis], 3, axis=2)
+
+    # Extract bounding box for object from mask
+    non_mask_coords = np.where(mask_np == 1)
+    lowest_x = np.min(non_mask_coords[0])
+    highest_x = np.max(non_mask_coords[0])
+    lowest_y = np.min(non_mask_coords[1])
+    highest_y = np.max(non_mask_coords[1])
+    box = [lowest_x, lowest_y, highest_x, highest_y]
 
     # Apply the mask to the original image
     aug_image_np = np.array(generated)
@@ -197,14 +196,18 @@ def createData(sample):
     # Save or display the combined image
     plt.subplot(224).imshow(combined_image)
     plt.title("Final Output!")
-    timestamp = int(time.time() * 1000)
-    combined_image.save(f"final_augmented_{timestamp}.png")
-
+    
     # Update labels and boxes
-    new_labels = target['labels']
-    new_boxes = target['boxes']
-    # new_labels.update(added_label)
-    # new_boxes.update(added_box)
+    target.append({
+        'type': 'Cyclist', 
+        'truncated': 0.0, 
+        'occluded': 0, 
+        'alpha': -10, 
+        'bbox': box, 
+        'dimensions': [-1, -1, -1], 
+        'location': [-1, -1, -1], 
+        'rotation_y': -10
+    })
     
     plt.axis('off')
     plt.show()
@@ -215,8 +218,17 @@ dataset = KittiTorch(root='../data', download=False)
 labels = ['background', 'Car', 'Van', 'Truck', 'Pedestrian', 'Person_sitting', 'Cyclist', 'Tram', 'Misc', "Don'tCare"]
 
 # Execute pipeline
-out_image, out_target = createData(dataset[0])
-# TODO: add image and target to dataset
+out_image, out_target = createData(dataset[2])
+
+timestamp = int(time.time() * 1000)
+out_image.save(f"images/{timestamp}.png")
+
+with open(f"labels/{timestamp}.txt", "w") as f:
+    out_target['bbox'] = " ".join(out_target['bbox'])
+    out_target['dimensions'] = " ".join(out_target['dimensions'])
+    out_target['location'] = " ".join(out_target['location'])
+
+    f.write(" ".join(out_target.values()))
 
 # get_tensor = get_transform()
 # tensored = get_tensor(image2)
