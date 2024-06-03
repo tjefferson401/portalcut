@@ -1,14 +1,12 @@
-from datasets import KittiTorch
 import torch
 from torch.utils.data import DataLoader, Subset
 import torchvision.transforms as transforms
 import utils
 
 
-from datasets import KittiTorch
 
 
-def get_dataloaders(dataset):
+def get_datamoduels(dataset, batch_size=4):
     indices = torch.randperm(len(dataset)).tolist()
 
     # Calculate split sizes, it should add up to 1
@@ -27,16 +25,13 @@ def get_dataloaders(dataset):
     test_indices = indices[train_size + val_size:]
 
     # Create dataset subsets
-    dataset_train = Subset(dataset, train_indices)
-    dataset_val = Subset(dataset, val_indices)
-    dataset_test = Subset(dataset, test_indices)
-
-    # Define batch size
-    batch_size = 4
+    train_dataset = Subset(dataset, train_indices)
+    val_dataset = Subset(dataset, val_indices)
+    test_dataset = Subset(dataset, test_indices)
 
     # Data loaders
     train_dataloader = DataLoader(
-        dataset_train,
+        train_dataset,
         batch_size=batch_size,
         shuffle=True,
         num_workers=0,
@@ -44,7 +39,7 @@ def get_dataloaders(dataset):
     )
 
     val_dataloader = DataLoader(
-        dataset_val,
+        val_dataset,
         batch_size=batch_size,
         shuffle=False,
         num_workers=0,
@@ -52,7 +47,7 @@ def get_dataloaders(dataset):
     )
 
     test_dataloader = DataLoader(
-        dataset_test,
+        test_dataset,
         batch_size=batch_size,
         shuffle=False,
         num_workers=0,
@@ -60,11 +55,13 @@ def get_dataloaders(dataset):
     )
 
     # Print sizes of datasets to confirm splits
-    print("Training set size:", len(dataset_train))
-    print("Validation set size:", len(dataset_val))
-    print("Testing set size:", len(dataset_test))
+    print("Dataset size:", len(dataset))
+    print(f"Batch size: {batch_size}")
+    print("Training set size:", len(train_dataset))
+    print("Validation set size:", len(val_dataset))
+    print("Testing set size:", len(test_dataset))
     
-    return train_dataloader, val_dataloader, test_dataloader
+    return train_dataset, val_dataset, test_dataset, train_dataloader, val_dataloader, test_dataloader
 
 def get_transform():
     transform = [transforms.ToTensor()]

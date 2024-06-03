@@ -1,6 +1,6 @@
 import math
 import sys
-import time
+import os
 import torch
 import utils
 import wandb
@@ -9,21 +9,25 @@ import json
 import random
 import numpy as np
 from evals import evaluate_model
+import pprint as pp
 
 
-def train_model(model, dataloaders, epochs, config, batch_size, learning_rate=0.001):
+def train_model(model, dataloaders, datasets, epochs, model_config, learning_rate=0.001):
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     model.to(device)
     
     print_freq = 10
-    batch_size = config['batch_size']
+    best_val_accuracy = 0
+    batch_size = model_config['batch_size']
 
+    train_dataset, val_dataset, test_dataset = datasets
     # Data loaders is a tuple of (train_loader, val_loader, test_loader)
     train_dataloader, val_dataloader, test_dataloader = dataloaders
+    
 
     wandb.init(project="portalcut",
             entity='231n-augmentation', 
-            notes="2024-05-30-kitti-test1-fasterrcnn_resnet50_fpn_v2_scratch_50ep_v2",
+            notes=model_config['name'],
             
             config={
                 "learning_rate": learning_rate,
@@ -35,7 +39,7 @@ def train_model(model, dataloaders, epochs, config, batch_size, learning_rate=0.
     
 
     params = [p for p in model.parameters() if p.requires_grad]
-    optimizer = torch.optim.Adam(params, lr=learning_rate)
+    optimizer = torch.optim.SGD(params, lr=learning_rate, momentum=0.9, weight_decay=0.0005)
 
 
     # Training loop
@@ -84,59 +88,90 @@ def train_model(model, dataloaders, epochs, config, batch_size, learning_rate=0.
         Evaluation after each epoch
         """
         # Evaluate on validation set
-        avg_iou, avg_precision, avg_recall, avg_f1, avg_map = evaluate_model(model, dataloaders['val'], device)
+        mean_iou, avg_precision, avg_recall, avg_f1, mAP, per_class_ap = evaluate_model(model, val_dataset, model_config['dataset_config']['class_list'])
+        # print(f"Mean IoU: {mean_iou:.4f}, mAP: {mAP:.4f}, Precision: {avg_precision:.4f}, Recall: {avg_recall:.4f}, F1: {avg_f1:.4f}")
         wandb.log({
-            'val_iou': avg_iou,
+            'val_iou': mean_iou,
             'val_precision': avg_precision,
             'val_recall': avg_recall,
             'val_f1': avg_f1,
-            'val_map': avg_map,
-            'epoch': epoch
+            'val_mAP': mAP,
+            'epoch': epoch,
+            **per_class_ap
         })
+        
 
         # Save the model if it has the best validation accuracy so far
-        if avg_map > best_val_accuracy:
-            best_val_accuracy = avg_map
-            torch.save(model.state_dict(), f"{config['name']}_best_val_model.pth")
+        if mAP > best_val_accuracy:
+            best_val_accuracy = mAP
+            os.makedirs(f"models/{model_config['name']}", exist_ok=True)
+            torch.save(model.state_dict(), f"models/{model_config['name']}/best_val_model.pth")
 
         # Save model after every epoch or as needed
-        torch.save(model.state_dict(), f"{config['name']}_epoch_{epoch}.pth")
+        os.makedirs(f"models/{model_config['name']}", exist_ok=True)
+        torch.save(model.state_dict(), f"models/{model_config['name']}/epoch_{epoch}.pth")
 
     """
     Evaluation on the test set
     """
-    test_iou, test_precision, test_recall, test_f1, test_map = evaluate_model(model, dataloaders['test'], device)
+    test_iou, test_precision, test_recall, test_f1, test_mAP, test_per_class_ap = evaluate_model(model, test_dataset, model_config['dataset_config']['class_list'])
     wandb.log({
         'test_iou': test_iou,
         'test_precision': test_precision,
         'test_recall': test_recall,
         'test_f1': test_f1,
-        'test_map': test_map
+        'test_map': test_mAP,
+        **test_per_class_ap
     })
 
     # Save final model
-    torch.save(model.state_dict(), f"{config['name']}_final_model.pth")
+    os.makedirs(f"models/{model_config['name']}", exist_ok=True)
+    torch.save(model.state_dict(), f"models/{model_config['name']}/final_model.pth")
 
+    pp.pprint(per_class_ap)
     # Save accuracy results locally
+    print(f"Mean IoU: {mean_iou:.4f}")
+    print(f"test_iou: {test_iou:.4f}")
+    
     results = {
-        'config': config,
-        'val_iou': avg_iou,
+        **model_config,
+        'val_iou': float(mean_iou),
         'val_precision': avg_precision,
         'val_recall': avg_recall,
         'val_f1': avg_f1,
-        'val_map': avg_map,
-        'test_iou': test_iou,
+        'val_map': mAP,
+        'test_iou': float(test_iou),
         'test_precision': test_precision,
         'test_recall': test_recall,
         'test_f1': test_f1,
-        'test_map': test_map
+        'test_map': test_mAP,
+        'Car_ap': per_class_ap['Car_ap'],
+        'Van_ap': per_class_ap['Van_ap'],
+        'Truck_ap': per_class_ap['Truck_ap'],
+        'Pedestrian_ap': per_class_ap['Pedestrian_ap'],
+        'Person_sitting_ap': per_class_ap['Person_sitting_ap'],
+        'Cyclist_ap': per_class_ap['Cyclist_ap'],
+        'Tram_ap': per_class_ap['Tram_ap'],
+        'Misc_ap': per_class_ap['Misc_ap'],     
     }
-    with open(f"{config['name']}_results.json", 'w') as f:
-        json.dump(results, f)
+    # Assuming 'results' is already defined as shown above
+    for key, value in results.items():
+        print(f"The type of '{key}' is {type(value)}")
+
+    os.makedirs(f"results/{model_config['name']}", exist_ok=True)
+    
+    with open(f"results/{model_config['name']}/results.json", 'w') as f:
+        json.dump(results, f)  # Use the custom default function
+
 
     wandb.finish()
     
     return model
+
+def tensor_to_list(obj):
+    if isinstance(obj, torch.Tensor):
+        return obj.tolist()  # Convert tensors to lists
+    raise TypeError("Object of type Tensor is not JSON serializable")
 
 
 

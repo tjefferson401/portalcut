@@ -15,6 +15,10 @@ def get_model(config):
         model = get_fasterrcnn_resnet50_fpn(num_classes, pretrained, freeze_layers)
     elif model_name == 'fasterrcnn_resnet50_fpn_v2':
         model = get_fasterrcnn_resnet50_fpn_v2(num_classes, pretrained, freeze_layers)
+    elif model_name == 'fasterrcnn_mobilenet_v3_large_fpn':
+        model = get_fasterrcnn_mobilenet_v3_large_fpn(num_classes, pretrained, freeze_layers)
+    elif model_name == 'fasterrcnn_resnet50_fpn_v3':
+        model = get_fasterrcnn_mobilenet_v3_large_320_fpn(num_classes, pretrained, freeze_layers)
         
     # elif model_name == 'mobilenet':
     #     model = torchvision.models.detection.fasterrcnn_mobilenet_v3_large_fpn(pretrained=True)
@@ -26,7 +30,7 @@ def get_model(config):
   
 def get_fasterrcnn_resnet50_fpn(num_classes, pretrained=True, freeze_layers=False):
     
-    model = torchvision.models.detection.fasterrcnn_resnet50_fpn2(pretrained=pretrained)
+    model = torchvision.models.detection.fasterrcnn_resnet50_fpn(pretrained=pretrained)
     # get number of input features for the classifier
     in_features = model.roi_heads.box_predictor.cls_score.in_features
     # replace the pre-trained head with a new one
@@ -43,6 +47,35 @@ def get_fasterrcnn_resnet50_fpn(num_classes, pretrained=True, freeze_layers=Fals
 def get_fasterrcnn_resnet50_fpn_v2(num_classes, pretrained=True, freeze_layers=False):
     
     model = torchvision.models.detection.fasterrcnn_resnet50_fpn_v2(pretrained=pretrained)
+    # get number of input features for the classifier
+    in_features = model.roi_heads.box_predictor.cls_score.in_features
+    # replace the pre-trained head with a new one
+    model.roi_heads.box_predictor = FastRCNNPredictor(in_features, num_classes)
+    
+    if freeze_layers:
+        for param in model.backbone.parameters():
+                param.requires_grad = False
+            
+    return model
+
+def get_fasterrcnn_mobilenet_v3_large_fpn(num_classes, pretrained=True, freeze_layers=False):
+    
+    model = torchvision.models.detection.fasterrcnn_mobilenet_v3_large_fpn(pretrained=pretrained)
+    # get number of input features for the classifier
+    in_features = model.roi_heads.box_predictor.cls_score.in_features
+    # replace the pre-trained head with a new one
+    model.roi_heads.box_predictor = FastRCNNPredictor(in_features, num_classes)
+    
+    if freeze_layers:
+        for param in model.backbone.parameters():
+                param.requires_grad = False
+            
+    return model
+
+
+def get_fasterrcnn_mobilenet_v3_large_320_fpn(num_classes, pretrained=True, freeze_layers=False):
+    
+    model = torchvision.models.detection.fasterrcnn_mobilenet_v3_large_320_fpn(pretrained=pretrained)
     # get number of input features for the classifier
     in_features = model.roi_heads.box_predictor.cls_score.in_features
     # replace the pre-trained head with a new one

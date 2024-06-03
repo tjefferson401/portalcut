@@ -1,23 +1,8 @@
 import torch
-from collections import defaultdict
+import torch.nn as nn
 import numpy as np
 from torchvision.ops import box_iou
 from collections import defaultdict
-
-def calculate_iou(box1, box2):
-    # Calculate the intersection area
-    x1 = max(box1[0], box2[0])
-    y1 = max(box1[1], box2[1])
-    x2 = min(box1[2], box2[2])
-    y2 = min(box1[3], box2[3])
-    intersection = max(0, x2 - x1) * max(0, y2 - y1)
-
-    # Calculate the union area
-    box1_area = (box1[2] - box1[0]) * (box1[3] - box1[1])
-    box2_area = (box2[2] - box2[0]) * (box2[3] - box2[1])
-    union = box1_area + box2_area - intersection
-
-    return intersection / union if union != 0 else 0
 
 def compute_iou(boxes1, boxes2):
     if boxes1.numel() == 0 or boxes2.numel() == 0:
@@ -27,15 +12,13 @@ def compute_iou(boxes1, boxes2):
     ious = box_iou(boxes1, boxes2)
     return ious
 
-
-
 def calculate_precision_recall_f1(pred_boxes, true_boxes, iou_threshold=0.5):
     tp = 0
     fp = 0
     fn = 0
 
     for pred_box in pred_boxes:
-        if any(calculate_iou(pred_box, true_box) >= iou_threshold for true_box in true_boxes):
+        if any(compute_iou(pred_box.unsqueeze(0), true_box.unsqueeze(0)) >= iou_threshold for true_box in true_boxes):
             tp += 1
         else:
             fp += 1
@@ -55,54 +38,13 @@ def calculate_map(pred_boxes, true_boxes, iou_thresholds=np.linspace(0.5, 0.95, 
 
     return np.mean(aps)
 
-
-def new_evaluate_model(model, dataloader, device):
-    model.eval()
-    total_iou = 0
-    total_precision = 0
-    total_recall = 0
-    total_f1 = 0
-    total_map = 0
-    total_samples = 0
-
-    with torch.no_grad():
-        for images, targets in dataloader:
-            images = [image.to(device) for image in images]
-            targets = [{k: v.to(device) for k, v in t.items()} for t in targets]
-
-            outputs = model(images)
-            for i, output in enumerate(outputs):
-                pred_boxes = output['boxes'].cpu().numpy()
-                true_boxes = targets[i]['boxes'].cpu().numpy()
-
-                iou = np.mean([calculate_iou(pred_box, true_box) for pred_box, true_box in zip(pred_boxes, true_boxes)])
-                precision, recall, f1 = calculate_precision_recall_f1(pred_boxes, true_boxes)
-                map_score = calculate_map(pred_boxes, true_boxes)
-
-                total_iou += iou
-                total_precision += precision
-                total_recall += recall
-                total_f1 += f1
-                total_map += map_score
-                total_samples += 1
-
-    avg_iou = total_iou / total_samples
-    avg_precision = total_precision / total_samples
-    avg_recall = total_recall / total_samples
-    avg_f1 = total_f1 / total_samples
-    avg_map = total_map / total_samples
-
-    return avg_iou, avg_precision, avg_recall, avg_f1, avg_map
-
-
-
-# Alversion already working
 def evaluate_model(model, dataset, label_names, iou_threshold=0.5):
     all_true_boxes = []
     all_pred_boxes = []
     all_true_labels = []
     all_pred_labels = []
 
+    model.eval()
     for idx in range(len(dataset)):
         image, target = dataset[idx]
         input_tensor = image.unsqueeze(0).to('cuda')
@@ -114,12 +56,24 @@ def evaluate_model(model, dataset, label_names, iou_threshold=0.5):
         true_labels = target['labels'].to('cuda')
         pred_boxes = predictions['boxes'].to('cuda')
         pred_labels = predictions['labels'].to('cuda')
+        
+        # Create masks for excluding 'Background' and 'DontCare' labels
+        exclude_labels = torch.tensor([label_names.index('Background'), label_names.index('DontCare')], device='cuda')
+        relevant_true_mask = ~(true_labels.unsqueeze(1) == exclude_labels).any(1)
+        relevant_pred_mask = ~(pred_labels.unsqueeze(1) == exclude_labels).any(1)
 
-        all_true_boxes.append(true_boxes)
-        all_pred_boxes.append(pred_boxes)
-        all_true_labels.append(true_labels)
-        all_pred_labels.append(pred_labels)
+        filtered_true_boxes = true_boxes[relevant_true_mask]
+        filtered_true_labels = true_labels[relevant_true_mask]
+        filtered_pred_boxes = pred_boxes[relevant_pred_mask]
+        filtered_pred_labels = pred_labels[relevant_pred_mask]
 
+        all_true_boxes.append(filtered_true_boxes)
+        all_pred_boxes.append(filtered_pred_boxes)
+        all_true_labels.append(filtered_true_labels)
+        all_pred_labels.append(filtered_pred_labels)
+
+
+    # Calculate IoU
     iou_scores = []
     for true_boxes, pred_boxes in zip(all_true_boxes, all_pred_boxes):
         iou_scores.append(compute_iou(true_boxes, pred_boxes))
@@ -127,14 +81,21 @@ def evaluate_model(model, dataset, label_names, iou_threshold=0.5):
     mean_iou = torch.mean(torch.stack([torch.mean(iou) for iou in iou_scores if iou.numel() > 0]))
     print(f"Mean IoU: {mean_iou:.4f}")
 
-    # Compute mAP (mean Average Precision)
+    # Calculate Precision, Recall, F1-Score, and mAP
     aps = []
+    total_precision = 0
+    total_recall = 0
+    total_f1 = 0
+    total_samples = 0
+
+    per_class_ap = {}
     for i, label_name in enumerate(label_names):
-        if label_name == "Background":
+        if label_name == "Background" or label_name == "DontCare":
             continue
         
         true_positives = []
         false_positives = []
+        false_negatives = []
         num_gt = 0
 
         for true_boxes, true_labels, pred_boxes, pred_labels in zip(all_true_boxes, all_true_labels, all_pred_boxes, all_pred_labels):
@@ -143,28 +104,57 @@ def evaluate_model(model, dataset, label_names, iou_threshold=0.5):
             num_gt += len(gt_boxes)
 
             if len(pred_boxes) == 0:
+                false_negatives.append(len(gt_boxes))
                 continue
             
             ious = compute_iou(gt_boxes, pred_boxes)
             if ious.numel() == 0:
+                false_negatives.append(len(gt_boxes))
                 continue
-            true_positive = ious.max(dim=0)[0] > iou_threshold
-            false_positive = ~true_positive
 
-            true_positives.extend(true_positive.cpu().numpy())
-            false_positives.extend(false_positive.cpu().numpy())
-        
+            max_ious, _ = ious.max(dim=1)
+            detected = max_ious > iou_threshold
+            true_positives.extend(detected.cpu().numpy())
+            false_positives.extend(~detected.cpu().numpy())
+            false_negatives.append(len(gt_boxes) - detected.sum().item())
+            
         tp_cumsum = np.cumsum(true_positives)
         fp_cumsum = np.cumsum(false_positives)
+        fn_cumsum = np.cumsum(false_negatives)
+        
         precisions = tp_cumsum / (tp_cumsum + fp_cumsum + 1e-6)
         recalls = tp_cumsum / (num_gt + 1e-6)
 
         ap = np.trapz(precisions, recalls)
         aps.append(ap)
 
+        precision = tp_cumsum[-1] / (tp_cumsum[-1] + fp_cumsum[-1] + 1e-6)
+        recall = tp_cumsum[-1] / (num_gt + 1e-6)
+        f1 = 2 * (precision * recall) / (precision + recall + 1e-6)
+
+        total_precision += precision
+        total_recall += recall
+        total_f1 += f1
+        total_samples += 1
+
+        per_class_ap[f'{label_name}_ap'] = ap
         print(f"AP for {label_name}: {ap:.4f}")
 
     mAP = np.mean(aps)
+    avg_precision = total_precision / total_samples
+    avg_recall = total_recall / total_samples
+    avg_f1 = total_f1 / total_samples
+
+    # Ensure recall does not exceed 1
+    avg_recall = min(avg_recall, 1.0)
+
     print(f"Mean Average Precision (mAP): {mAP:.4f}")
+    print(f"Average Precision: {avg_precision:.4f}")
+    print(f"Average Recall: {avg_recall:.4f}")
+    print(f"Average F1-Score: {avg_f1:.4f}")
 
+    return mean_iou, avg_precision, avg_recall, avg_f1, mAP, per_class_ap
 
+# Example usage
+# Assuming model is loaded and dataset_test is prepared
+# mean_iou, avg_precision, avg_recall, avg_f1, mAP = evaluate_model(model, dataset_test, label_names)
