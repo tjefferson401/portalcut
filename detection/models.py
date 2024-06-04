@@ -17,7 +17,7 @@ def get_model(config):
         model = get_fasterrcnn_resnet50_fpn_v2(num_classes, pretrained, freeze_layers)
     elif model_name == 'fasterrcnn_mobilenet_v3_large_fpn':
         model = get_fasterrcnn_mobilenet_v3_large_fpn(num_classes, pretrained, freeze_layers)
-    elif model_name == 'fasterrcnn_resnet50_fpn_v3':
+    elif model_name == 'fasterrcnn_mobilenet_v3_large_320_fpn':
         model = get_fasterrcnn_mobilenet_v3_large_320_fpn(num_classes, pretrained, freeze_layers)
         
     # elif model_name == 'mobilenet':
