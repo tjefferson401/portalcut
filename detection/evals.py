@@ -169,12 +169,16 @@ def evaluate_model(model, dataset, label_names, iou_threshold=0.5):
 
     model.eval()
     for idx in range(len(dataset)):
+        # get the image and the target from the dataset
         image, target = dataset[idx]
+        # put the image into the right tensor format 
         input_tensor = image.unsqueeze(0).to('cuda')
         
+        # Get the predictions given the input tensor
         with torch.no_grad():
             predictions = model(input_tensor)[0]
         
+        # Break into separate tensors
         true_boxes = target['boxes'].to('cuda')
         true_labels = target['labels'].to('cuda')
         pred_boxes = predictions['boxes'].to('cuda')
@@ -182,13 +186,19 @@ def evaluate_model(model, dataset, label_names, iou_threshold=0.5):
         
         # Create masks for excluding 'Background' and 'DontCare' labels
         exclude_labels = torch.tensor([label_names.index('Background'), label_names.index('DontCare')], device='cuda')
+
+        # get the compliment values of the labels
         relevant_true_mask = ~(true_labels.unsqueeze(1) == exclude_labels).any(1)
         relevant_pred_mask = ~(pred_labels.unsqueeze(1) == exclude_labels).any(1)
 
+
+        # filter the boxes and labels based on the masks
         filtered_true_boxes = true_boxes[relevant_true_mask]
         filtered_true_labels = true_labels[relevant_true_mask]
         filtered_pred_boxes = pred_boxes[relevant_pred_mask]
         filtered_pred_labels = pred_labels[relevant_pred_mask]
+
+        # At this point, all Background and DontCare labeled rows have been removed
 
         all_true_boxes.append(filtered_true_boxes)
         all_pred_boxes.append(filtered_pred_boxes)
@@ -247,7 +257,7 @@ def evaluate_model(model, dataset, label_names, iou_threshold=0.5):
         
         if len(tp_cumsum) > 0 and len(fp_cumsum) > 0:
             precision = tp_cumsum[-1] / (tp_cumsum[-1] + fp_cumsum[-1] + 1e-6)
-            recall = tp_cumsum[-1] / (num_gt + 1e-6)
+            recall = tp_cumsum[-1] / (fn_cumsum[-1] + tp_cumsum[-1] + 1e-6)
             f1 = 2 * (precision * recall) / (precision + recall + 1e-6)
             ap = np.trapz(np.clip(tp_cumsum / (tp_cumsum + fp_cumsum + 1e-6), 0, 1), np.clip(tp_cumsum / (num_gt + 1e-6), 0, 1))
         else:

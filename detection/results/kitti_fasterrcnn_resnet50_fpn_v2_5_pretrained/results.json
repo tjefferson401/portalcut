@@ -1,1 +1,40 @@
-{"name": "fasterrcnn_resnet50_fpn_v2", "pretrained": true, "freeze_layers": false, "batch_size": 4, "dataset": "kitti", "dataset_config": {"class_list": ["Background", "Car", "Van", "Truck", "Pedestrian", "Person_sitting", "Cyclist", "Tram", "Misc", "DontCare"], "num_classes": 10}, "val_iou": 0.24506033957004547, "val_precision": 0.9423897872148644, "val_recall": 0.9120797954298505, "val_f1": 0.9265194079875453, "val_map": 0.8535783792053926, "test_iou": 0.24538998305797577, "test_precision": 0.9485394054951293, "test_recall": 0.920647575742794, "test_f1": 0.9336535966846333, "test_map": 0.8742091813610351, "Car_ap": 0.9793122003704401, "Van_ap": 0.9689372638036426, "Truck_ap": 0.9261461012592488, "Pedestrian_ap": 0.8600027623978865, "Person_sitting_ap": 0.39038031568302023, "Cyclist_ap": 0.9059487545037033, "Tram_ap": 0.9607842166668936, "Misc_ap": 0.8371154189583058}
+{
+    "name": "fasterrcnn_resnet50_fpn_v2",
+    "pretrained": true,
+    "freeze_layers": false,
+    "batch_size": 4,
+    "dataset": "kitti",
+    "dataset_config": {
+        "class_list": [
+            "Background",
+            "Car",
+            "Van",
+            "Truck",
+            "Pedestrian",
+            "Person_sitting",
+            "Cyclist",
+            "Tram",
+            "Misc",
+            "DontCare"
+        ],
+        "num_classes": 10
+    },
+    "val_iou": 0.24506033957004547,
+    "val_precision": 0.9423897872148644,
+    "val_recall": 0.9120797954298505,
+    "val_f1": 0.9265194079875453,
+    "val_map": 0.8535783792053926,
+    "test_iou": 0.24538998305797577,
+    "test_precision": 0.9485394054951293,
+    "test_recall": 0.920647575742794,
+    "test_f1": 0.9336535966846333,
+    "test_map": 0.8742091813610351,
+    "Car_ap": 0.9793122003704401,
+    "Van_ap": 0.9689372638036426,
+    "Truck_ap": 0.9261461012592488,
+    "Pedestrian_ap": 0.8600027623978865,
+    "Person_sitting_ap": 0.39038031568302023,
+    "Cyclist_ap": 0.9059487545037033,
+    "Tram_ap": 0.9607842166668936,
+    "Misc_ap": 0.8371154189583058
+}

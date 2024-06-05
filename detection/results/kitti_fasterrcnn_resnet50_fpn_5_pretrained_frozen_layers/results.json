@@ -1,1 +1,40 @@
-{"name": "fasterrcnn_resnet50_fpn", "pretrained": true, "freeze_layers": true, "batch_size": 4, "dataset": "kitti", "dataset_config": {"class_list": ["Background", "Car", "Van", "Truck", "Pedestrian", "Person_sitting", "Cyclist", "Tram", "Misc", "DontCare"], "num_classes": 10}, "val_iou": 0.14070110023021698, "val_precision": 0.8456002534962833, "val_recall": 0.8084617821216755, "val_f1": 0.8256529404475954, "val_map": 0.6970950403724936, "test_iou": 0.1411624252796173, "test_precision": 0.911389990387402, "test_recall": 0.8700522390155654, "test_f1": 0.8894897877050607, "test_map": 0.7871951430477412, "Car_ap": 0.9509074236486234, "Van_ap": 0.8525148338615196, "Truck_ap": 0.7987128487531087, "Pedestrian_ap": 0.7683154541803263, "Person_sitting_ap": 0.20665440156083129, "Cyclist_ap": 0.8204573245886508, "Tram_ap": 0.7691812362808668, "Misc_ap": 0.4100168001060224}
+{
+    "name": "fasterrcnn_resnet50_fpn",
+    "pretrained": true,
+    "freeze_layers": true,
+    "batch_size": 4,
+    "dataset": "kitti",
+    "dataset_config": {
+        "class_list": [
+            "Background",
+            "Car",
+            "Van",
+            "Truck",
+            "Pedestrian",
+            "Person_sitting",
+            "Cyclist",
+            "Tram",
+            "Misc",
+            "DontCare"
+        ],
+        "num_classes": 10
+    },
+    "val_iou": 0.14070110023021698,
+    "val_precision": 0.8456002534962833,
+    "val_recall": 0.8084617821216755,
+    "val_f1": 0.8256529404475954,
+    "val_map": 0.6970950403724936,
+    "test_iou": 0.1411624252796173,
+    "test_precision": 0.911389990387402,
+    "test_recall": 0.8700522390155654,
+    "test_f1": 0.8894897877050607,
+    "test_map": 0.7871951430477412,
+    "Car_ap": 0.9509074236486234,
+    "Van_ap": 0.8525148338615196,
+    "Truck_ap": 0.7987128487531087,
+    "Pedestrian_ap": 0.7683154541803263,
+    "Person_sitting_ap": 0.20665440156083129,
+    "Cyclist_ap": 0.8204573245886508,
+    "Tram_ap": 0.7691812362808668,
+    "Misc_ap": 0.4100168001060224
+}
