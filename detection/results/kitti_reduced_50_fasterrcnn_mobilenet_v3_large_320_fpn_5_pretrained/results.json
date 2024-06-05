@@ -1,0 +1,40 @@
+{
+  "name": "fasterrcnn_mobilenet_v3_large_320_fpn",
+  "pretrained": true,
+  "freeze_layers": false,
+  "batch_size": 4,
+  "dataset": "kitti_reduced_50",
+  "dataset_config": {
+    "class_list": [
+      "Background",
+      "Car",
+      "Van",
+      "Truck",
+      "Pedestrian",
+      "Person_sitting",
+      "Cyclist",
+      "Tram",
+      "Misc",
+      "DontCare"
+    ],
+    "num_classes": 10
+  },
+  "val_iou": 0.1830388307571411,
+  "val_precision": 0.5942506753628638,
+  "val_recall": 0.4887132310346176,
+  "val_f1": 0.5325494706087134,
+  "val_map": 0.3249207125914226,
+  "test_iou": 0.18388818204402924,
+  "test_precision": 0.6366714687933641,
+  "test_recall": 0.5418271004237806,
+  "test_f1": 0.5829334185178932,
+  "test_map": 0.36249178096602863,
+  "Car_ap": 0.6117314263664775,
+  "Van_ap": 0.36173335822439917,
+  "Truck_ap": 0.45879792215702075,
+  "Pedestrian_ap": 0.34802099681413096,
+  "Person_sitting_ap": 0.019764953125571395,
+  "Cyclist_ap": 0.3232289268830946,
+  "Tram_ap": 0.3248520005388459,
+  "Misc_ap": 0.1512361166218403
+}
