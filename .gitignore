@@ -8,3 +8,4 @@ __pycache__
 data
 detection/wandb/
 detection/models/
+tanmay/augmented_data
