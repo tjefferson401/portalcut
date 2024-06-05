@@ -30,6 +30,22 @@ def train_model(model, dataloaders, datasets, epochs, model_config, learning_rat
 
 
     model_saving_path = f"models/{model_full_name}"
+
+    # Check if final model already exists
+    final_model_path = os.path.join(model_saving_path, "final_model.pth")
+    if os.path.exists(final_model_path):
+        print()
+        print(f"\n##############################################################################################################\n")
+        print(f"Model {final_model_path} already exists. Loading and returning the model.")
+        print(f"\n##############################################################################################################\n")
+        print()
+        model.load_state_dict(torch.load(final_model_path))
+        model.to(device)
+        return model
+
+    # Continue with the rest of the function if the model does not exist
+
+
     result_saving_path = f"results/{model_full_name}"
     os.makedirs(model_saving_path , exist_ok=True)
     os.makedirs(result_saving_path , exist_ok=True)
