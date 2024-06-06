@@ -197,7 +197,9 @@ def reset_environment(seed=42):
     if torch.cuda.is_available():
         torch.cuda.manual_seed(seed)
         torch.cuda.manual_seed_all(seed)
-    torch.backends.cudnn.deterministic = True
-    torch.backends.cudnn.benchmark = False
-    torch.cuda.empty_cache()
-    torch.cuda.ipc_collect()
+        torch.backends.cudnn.deterministic = True
+        torch.backends.cudnn.benchmark = False
+        torch.cuda.empty_cache()
+        torch.cuda.ipc_collect()
+    else:
+        torch.set_num_threads(1)

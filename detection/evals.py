@@ -7,8 +7,12 @@ from collections import defaultdict
 def compute_iou(boxes1, boxes2):
     if boxes1.numel() == 0 or boxes2.numel() == 0:
         return torch.tensor([]).to(boxes1.device)
-    boxes1 = boxes1.to('cuda')
-    boxes2 = boxes2.to('cuda')
+    if torch.cuda.is_available():
+        boxes1 = boxes1.to('cuda')
+        boxes2 = boxes2.to('cuda')
+    else:
+        boxes1 = boxes1.to('cpu')
+        boxes2 = boxes2.to('cpu')
     ious = box_iou(boxes1, boxes2)
     return ious
 
@@ -51,20 +55,32 @@ def evaluate_model(model, dataset, label_names, iou_threshold=0.5):
         # get the image and the target from the dataset
         image, target = dataset[idx]
         # put the image into the right tensor format 
-        input_tensor = image.unsqueeze(0).to('cuda')
+        # if uses cuda, put the tensor into cuda, else put it into cpu
+        if torch.cuda.is_available():
+            input_tensor = image.unsqueeze(0).to('cuda')
+        else:
+            input_tensor = image.unsqueeze(0).to('cpu')
         
         # Get the predictions given the input tensor
         with torch.no_grad():
             predictions = model(input_tensor)[0]
         
         # Break into separate tensors
-        true_boxes = target['boxes'].to('cuda')
-        true_labels = target['labels'].to('cuda')
-        pred_boxes = predictions['boxes'].to('cuda')
-        pred_labels = predictions['labels'].to('cuda')
+        if torch.cuda.is_available():
+            true_boxes = target['boxes'].to('cuda')
+            true_labels = target['labels'].to('cuda')
+            pred_boxes = predictions['boxes'].to('cuda')
+            pred_labels = predictions['labels'].to('cuda')
+            exclude_labels = torch.tensor([label_names.index('Background'), label_names.index('DontCare')], device='cuda')
+
+        else:
+            true_boxes = target['boxes'].to('cpu')
+            true_labels = target['labels'].to('cpu')
+            pred_boxes = predictions['boxes'].to('cpu')
+            pred_labels = predictions['labels'].to('cpu')
         
         # Create masks for excluding 'Background' and 'DontCare' labels
-        exclude_labels = torch.tensor([label_names.index('Background'), label_names.index('DontCare')], device='cuda')
+            exclude_labels = torch.tensor([label_names.index('Background'), label_names.index('DontCare')], device='cpu')
 
         # get the compliment values of the labels
         relevant_true_mask = ~(true_labels.unsqueeze(1) == exclude_labels).any(1)
@@ -136,7 +152,7 @@ def evaluate_model(model, dataset, label_names, iou_threshold=0.5):
         
         if len(tp_cumsum) > 0 and len(fp_cumsum) > 0:
             precision = tp_cumsum[-1] / (tp_cumsum[-1] + fp_cumsum[-1] + 1e-6)
-            recall = tp_cumsum[-1] / (fn_cumsum[-1] + tp_cumsum[-1] + 1e-6)
+            recall = tp_cumsum[-1] / (num_gt + 1e-6)
             f1 = 2 * (precision * recall) / (precision + recall + 1e-6)
             ap = np.trapz(np.clip(tp_cumsum / (tp_cumsum + fp_cumsum + 1e-6), 0, 1), np.clip(tp_cumsum / (num_gt + 1e-6), 0, 1))
         else:

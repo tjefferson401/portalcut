@@ -1,1 +1,40 @@
-{"name": "fasterrcnn_resnet50_fpn_v2", "pretrained": false, "freeze_layers": false, "batch_size": 4, "dataset": "kitti_reduced_50_augmented_v2m", "dataset_config": {"class_list": ["Background", "Car", "Van", "Truck", "Pedestrian", "Person_sitting", "Cyclist", "Tram", "Misc", "DontCare"], "num_classes": 10}, "val_iou": 0.08245310932397842, "val_precision": 0.2403868248825579, "val_recall": 0.19628708853289814, "val_f1": 0.21357054181074114, "val_map": 0.1405639543101036, "test_iou": 0.08428514748811722, "test_precision": 0.25201630830781935, "test_recall": 0.20396836078769648, "test_f1": 0.22294147663805203, "test_map": 0.1533449390096967, "Car_ap": 0.8148859236509969, "Van_ap": 0.03995718047423112, "Truck_ap": 0.2550533612774317, "Pedestrian_ap": 0.014615169078169146, "Person_sitting_ap": 0.0, "Cyclist_ap": 0.0, "Tram_ap": 0.0, "Misc_ap": 0.0}
+{
+    "name": "fasterrcnn_resnet50_fpn_v2",
+    "pretrained": false,
+    "freeze_layers": false,
+    "batch_size": 4,
+    "dataset": "kitti_reduced_50_augmented_v2m",
+    "dataset_config": {
+        "class_list": [
+            "Background",
+            "Car",
+            "Van",
+            "Truck",
+            "Pedestrian",
+            "Person_sitting",
+            "Cyclist",
+            "Tram",
+            "Misc",
+            "DontCare"
+        ],
+        "num_classes": 10
+    },
+    "val_iou": 0.08245310932397842,
+    "val_precision": 0.2403868248825579,
+    "val_recall": 0.19628708853289814,
+    "val_f1": 0.21357054181074114,
+    "val_map": 0.1405639543101036,
+    "test_iou": 0.08428514748811722,
+    "test_precision": 0.25201630830781935,
+    "test_recall": 0.20396836078769648,
+    "test_f1": 0.22294147663805203,
+    "test_map": 0.1533449390096967,
+    "Car_ap": 0.8148859236509969,
+    "Van_ap": 0.03995718047423112,
+    "Truck_ap": 0.2550533612774317,
+    "Pedestrian_ap": 0.014615169078169146,
+    "Person_sitting_ap": 0.0,
+    "Cyclist_ap": 0.0,
+    "Tram_ap": 0.0,
+    "Misc_ap": 0.0
+}

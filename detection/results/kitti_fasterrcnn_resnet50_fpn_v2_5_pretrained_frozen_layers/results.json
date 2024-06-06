@@ -1,1 +1,40 @@
-{"name": "fasterrcnn_resnet50_fpn_v2", "pretrained": true, "freeze_layers": true, "batch_size": 4, "dataset": "kitti", "dataset_config": {"class_list": ["Background", "Car", "Van", "Truck", "Pedestrian", "Person_sitting", "Cyclist", "Tram", "Misc", "DontCare"], "num_classes": 10}, "val_iou": 0.15061259269714355, "val_precision": 0.8777058185109722, "val_recall": 0.8472284689239467, "val_f1": 0.8617229889282549, "val_map": 0.7535181167185725, "test_iou": 0.1488405168056488, "test_precision": 0.8977682784428451, "test_recall": 0.8718351066783168, "test_f1": 0.8839659183253943, "test_map": 0.787337166822575, "Car_ap": 0.9618524469118936, "Van_ap": 0.9036627634481775, "Truck_ap": 0.8697219475156159, "Pedestrian_ap": 0.8104007468515242, "Person_sitting_ap": 0.35255985110292737, "Cyclist_ap": 0.8134884957482047, "Tram_ap": 0.6580914074873214, "Misc_ap": 0.6583672746829147}
+{
+    "name": "fasterrcnn_resnet50_fpn_v2",
+    "pretrained": true,
+    "freeze_layers": true,
+    "batch_size": 4,
+    "dataset": "kitti",
+    "dataset_config": {
+        "class_list": [
+            "Background",
+            "Car",
+            "Van",
+            "Truck",
+            "Pedestrian",
+            "Person_sitting",
+            "Cyclist",
+            "Tram",
+            "Misc",
+            "DontCare"
+        ],
+        "num_classes": 10
+    },
+    "val_iou": 0.15061259269714355,
+    "val_precision": 0.8777058185109722,
+    "val_recall": 0.8472284689239467,
+    "val_f1": 0.8617229889282549,
+    "val_map": 0.7535181167185725,
+    "test_iou": 0.1488405168056488,
+    "test_precision": 0.8977682784428451,
+    "test_recall": 0.8718351066783168,
+    "test_f1": 0.8839659183253943,
+    "test_map": 0.787337166822575,
+    "Car_ap": 0.9618524469118936,
+    "Van_ap": 0.9036627634481775,
+    "Truck_ap": 0.8697219475156159,
+    "Pedestrian_ap": 0.8104007468515242,
+    "Person_sitting_ap": 0.35255985110292737,
+    "Cyclist_ap": 0.8134884957482047,
+    "Tram_ap": 0.6580914074873214,
+    "Misc_ap": 0.6583672746829147
+}

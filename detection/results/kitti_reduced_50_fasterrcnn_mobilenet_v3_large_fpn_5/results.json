@@ -1,1 +1,40 @@
-{"name": "fasterrcnn_mobilenet_v3_large_fpn", "pretrained": false, "freeze_layers": false, "batch_size": 4, "dataset": "kitti_reduced_50", "dataset_config": {"class_list": ["Background", "Car", "Van", "Truck", "Pedestrian", "Person_sitting", "Cyclist", "Tram", "Misc", "DontCare"], "num_classes": 10}, "val_iou": 0.14874307811260223, "val_precision": 0.7668711434752356, "val_recall": 0.6909885866482328, "val_f1": 0.724881892266246, "val_map": 0.5402317305221317, "test_iou": 0.1506243348121643, "test_precision": 0.7695193581541334, "test_recall": 0.7066353978127742, "test_f1": 0.7349365670613502, "test_map": 0.5652577179736181, "Car_ap": 0.8681928877946187, "Van_ap": 0.5304278089833538, "Truck_ap": 0.695697605156634, "Pedestrian_ap": 0.5359003018056934, "Person_sitting_ap": 0.2036407489999901, "Cyclist_ap": 0.40730219493179054, "Tram_ap": 0.7174404993033154, "Misc_ap": 0.3632517972016577}
+{
+    "name": "fasterrcnn_mobilenet_v3_large_fpn",
+    "pretrained": false,
+    "freeze_layers": false,
+    "batch_size": 4,
+    "dataset": "kitti_reduced_50",
+    "dataset_config": {
+        "class_list": [
+            "Background",
+            "Car",
+            "Van",
+            "Truck",
+            "Pedestrian",
+            "Person_sitting",
+            "Cyclist",
+            "Tram",
+            "Misc",
+            "DontCare"
+        ],
+        "num_classes": 10
+    },
+    "val_iou": 0.14874307811260223,
+    "val_precision": 0.7668711434752356,
+    "val_recall": 0.6909885866482328,
+    "val_f1": 0.724881892266246,
+    "val_map": 0.5402317305221317,
+    "test_iou": 0.1506243348121643,
+    "test_precision": 0.7695193581541334,
+    "test_recall": 0.7066353978127742,
+    "test_f1": 0.7349365670613502,
+    "test_map": 0.5652577179736181,
+    "Car_ap": 0.8681928877946187,
+    "Van_ap": 0.5304278089833538,
+    "Truck_ap": 0.695697605156634,
+    "Pedestrian_ap": 0.5359003018056934,
+    "Person_sitting_ap": 0.2036407489999901,
+    "Cyclist_ap": 0.40730219493179054,
+    "Tram_ap": 0.7174404993033154,
+    "Misc_ap": 0.3632517972016577
+}

@@ -9,6 +9,7 @@ data
 detection/wandb/
 detection/models/
 tanmay/augmented_data
+models/
 tanmay/augmented_old
 tanmay/bad_data
 **/.DS_store

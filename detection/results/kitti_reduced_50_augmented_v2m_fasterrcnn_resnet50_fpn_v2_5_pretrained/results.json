@@ -1,1 +1,40 @@
-{"name": "fasterrcnn_resnet50_fpn_v2", "pretrained": true, "freeze_layers": false, "batch_size": 4, "dataset": "kitti_reduced_50_augmented_v2m", "dataset_config": {"class_list": ["Background", "Car", "Van", "Truck", "Pedestrian", "Person_sitting", "Cyclist", "Tram", "Misc", "DontCare"], "num_classes": 10}, "val_iou": 0.20416520535945892, "val_precision": 0.9426797550170408, "val_recall": 0.9231123046341745, "val_f1": 0.9326542671703093, "val_map": 0.8713396067578756, "test_iou": 0.20099151134490967, "test_precision": 0.940820149451438, "test_recall": 0.9224087110970846, "test_f1": 0.9314587976721986, "test_map": 0.844862272162208, "Car_ap": 0.9659835347776456, "Van_ap": 0.9097097424602972, "Truck_ap": 0.9053253283899118, "Pedestrian_ap": 0.8524810740690897, "Person_sitting_ap": 0.8202385414220661, "Cyclist_ap": 0.7885035378711773, "Tram_ap": 0.9480877325837425, "Misc_ap": 0.7803873624890737}
+{
+    "name": "fasterrcnn_resnet50_fpn_v2",
+    "pretrained": true,
+    "freeze_layers": false,
+    "batch_size": 4,
+    "dataset": "kitti_reduced_50_augmented_v2m",
+    "dataset_config": {
+        "class_list": [
+            "Background",
+            "Car",
+            "Van",
+            "Truck",
+            "Pedestrian",
+            "Person_sitting",
+            "Cyclist",
+            "Tram",
+            "Misc",
+            "DontCare"
+        ],
+        "num_classes": 10
+    },
+    "val_iou": 0.20416520535945892,
+    "val_precision": 0.9426797550170408,
+    "val_recall": 0.9231123046341745,
+    "val_f1": 0.9326542671703093,
+    "val_map": 0.8713396067578756,
+    "test_iou": 0.20099151134490967,
+    "test_precision": 0.940820149451438,
+    "test_recall": 0.9224087110970846,
+    "test_f1": 0.9314587976721986,
+    "test_map": 0.844862272162208,
+    "Car_ap": 0.9659835347776456,
+    "Van_ap": 0.9097097424602972,
+    "Truck_ap": 0.9053253283899118,
+    "Pedestrian_ap": 0.8524810740690897,
+    "Person_sitting_ap": 0.8202385414220661,
+    "Cyclist_ap": 0.7885035378711773,
+    "Tram_ap": 0.9480877325837425,
+    "Misc_ap": 0.7803873624890737
+}
