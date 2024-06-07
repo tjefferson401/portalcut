@@ -76,37 +76,38 @@ model_configs = [
 
 
 def main():
-    for percentage in percentages_list:
-        for config in model_configs:
+    for epochs in [5, 10, 20, 40, 80, 100]:
+        for percentage in percentages_list:
+            for config in model_configs:
 
-            # Renaming the dataset
-            curr_name = f'kittiv3_reduced_{int(100 * (1 - percentage))}'
-            config['dataset'] = curr_name
+                # Renaming the dataset
+                curr_name = f'kittiv3_reduced_{int(100 * (1 - percentage))}'
+                config['dataset'] = curr_name
 
-            #Restting the env
-            reset_environment()
+                #Restting the env
+                reset_environment()
 
-            # Getting the datasets
-            original_dataset = KittiTorch(root='../data', download=True, transform=get_transform())
-            augmented_dataset = KittiAugmentedV3(root='../data', download=True, transform=get_transform())
+                # Getting the datasets
+                original_dataset = KittiTorch(root='../data', download=True, transform=get_transform())
+                augmented_dataset = KittiAugmentedV3(root='../data', download=True, transform=get_transform())
 
-            # training loop for both datasets
-            for dataset in [original_dataset, augmented_dataset]:
+                # training loop for both datasets
+                for dataset in [original_dataset, augmented_dataset]:
 
-                # Renamig the augmented dtaset
-                if dataset == augmented_dataset:
-                    config['dataset'] = f'{curr_name}_augmented_v3'
+                    # Renamig the augmented dtaset
+                    if dataset == augmented_dataset:
+                        config['dataset'] = f'{curr_name}_augmented_v3'
 
-                # Getting the dataloaders
-                train_dataset, val_dataset, test_dataset, train_dataloader, val_dataloader, test_dataloader = \
-                    get_augmented_reduced_datamodules(dataset, batch_size=config['batch_size'], original_data_percentage=percentage)
-                
-                datasets = (train_dataset, val_dataset, test_dataset)
-                dataloaders = (train_dataloader, val_dataloader, test_dataloader)
+                    # Getting the dataloaders
+                    train_dataset, val_dataset, test_dataset, train_dataloader, val_dataloader, test_dataloader = \
+                        get_augmented_reduced_datamodules(dataset, batch_size=config['batch_size'], original_data_percentage=percentage)
+                    
+                    datasets = (train_dataset, val_dataset, test_dataset)
+                    dataloaders = (train_dataloader, val_dataloader, test_dataloader)
 
-                # Training the model
-                model = get_model(config)
-                model = train_model(model, dataloaders, datasets, 5, config, learning_rate=0.001)
+                    # Training the model
+                    model = get_model(config)
+                    model = train_model(model, dataloaders, datasets, epochs, config, learning_rate=0.001)
     
     
      

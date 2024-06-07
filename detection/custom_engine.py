@@ -31,6 +31,12 @@ def train_model(model, dataloaders, datasets, epochs, model_config, learning_rat
 
     model_saving_path = f"models/{model_full_name}"
 
+    tags = []
+    if model_config['pretrained']:
+        tags.append('pretrained')
+    if model_config['freeze_layers']:
+        tags.append('frozen_layers')
+        
     # Check if final model already exists
     final_model_path = os.path.join(model_saving_path, "final_model.pth")
     if os.path.exists(final_model_path):
@@ -52,20 +58,28 @@ def train_model(model, dataloaders, datasets, epochs, model_config, learning_rat
     
 
     wandb.init(project="portalcut",
-            entity='231n-augmentation', 
+            entity='231n-augmentation',
+            name=model_full_name,
             notes=model_config['name'],
-            
+            tags=tags, 
             config={
                 "learning_rate": learning_rate,
                 "epochs": epochs,
                 "batch_size": batch_size,
-                "optimizer": "Adam",
+                "optimizer": "SGD",
             })
     config = wandb.config
     
 
     params = [p for p in model.parameters() if p.requires_grad]
     optimizer = torch.optim.SGD(params, lr=learning_rate, momentum=0.9, weight_decay=0.0005)
+
+    wandb.config.update({
+    "model_architecture": str(model),  # Include model architecture details
+    "training_data_size": len(train_dataset),
+    "validation_data_size": len(val_dataset),
+    "test_data_size": len(test_dataset),
+    })
 
 
     # Training loop
@@ -176,9 +190,9 @@ def train_model(model, dataloaders, datasets, epochs, model_config, learning_rat
         'Tram_ap': per_class_ap['Tram_ap'],
         'Misc_ap': per_class_ap['Misc_ap'],     
     }
-    # Assuming 'results' is already defined as shown above
-    for key, value in results.items():
-        print(f"The type of '{key}' is {type(value)}")
+    # # Assuming 'results' is already defined as shown above
+    # for key, value in results.items():
+    #     print(f"The type of '{key}' is {type(value)}")
 
     
     with open(f"{result_saving_path}/results.json", 'w') as f:
